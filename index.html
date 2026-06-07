@@ -259,6 +259,13 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
 .rec-occ-note{color:var(--muted);flex:2;}
 .status-select{font-size:11px;padding:3px 6px;border:1px solid var(--sand-border);border-radius:6px;background:var(--white);font-family:var(--font-main);color:var(--ink);}
 
+/* PIPELINE TABS */
+.pipe-tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid var(--sand-border);padding-bottom:0;}
+.pipe-tab{padding:8px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0;transition:all .15s;white-space:nowrap;}
+.pipe-tab:hover{color:var(--teal);background:var(--sand);}
+.pipe-tab.active{color:var(--teal);border-bottom-color:var(--teal);background:var(--white);}
+.pipe-tab .tab-count{display:inline-block;background:var(--teal);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;}
+.pipe-tab.active .tab-count{background:var(--teal-dark);}
 /* PIPELINE LIST VIEW */
 .pipeline-list-wrap{width:100%;overflow-x:auto;}
 .pipeline-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -451,6 +458,7 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
           <span class="status-badge sb-completed">Completed</span>
           <span class="status-badge sb-onhold">On hold</span>
         </div>
+        <div id="pipeline-tabs" class="pipe-tabs"></div>
         <div class="pipeline-list-wrap">
           <table class="pipeline-table" id="pipeline-table">
             <thead>
@@ -1342,9 +1350,10 @@ function renderWeeklySummary() {
 
 let pipelineFilter = null;
 function filterPipeline(status) {
-  pipelineFilter = pipelineFilter===status ? null : status;
+  if(status==='upcoming') activePipeTab='upcoming';
+  else if(status==='Completed') activePipeTab='completed';
+  else activePipeTab='action';
   renderPipeline();
-  // Scroll to table
   document.getElementById('pipeline-table')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -1399,9 +1408,36 @@ function renderStats() {
 }
 
 // ── PIPELINE ──
+let activePipeTab = 'action';
+
+function setTab(tab) {
+  activePipeTab = tab;
+  renderPipeline();
+}
+
+function renderPipelineTabs() {
+  const el = document.getElementById('pipeline-tabs');
+  if(!el) return;
+  const actionCount = bookings.filter(b=>['Enquired','Quoted','Agreement sent','On hold'].includes(b.status)).length;
+  const upcomingCount = bookings.filter(b=>['Deposit paid','Confirmed'].includes(b.status)).length;
+  const completedCount = bookings.filter(b=>b.status==='Completed').length;
+  const allCount = bookings.length;
+  const tabs = [
+    {id:'action', label:'Needs action', count:actionCount},
+    {id:'upcoming', label:'Upcoming', count:upcomingCount},
+    {id:'completed', label:'Completed', count:completedCount},
+    {id:'all', label:'All bookings', count:allCount},
+  ];
+  el.innerHTML = tabs.map(t=>`
+    <div class="pipe-tab ${activePipeTab===t.id?'active':''}" onclick="setTab('${t.id}')">
+      ${t.label}${t.count>0?`<span class="tab-count">${t.count}</span>`:''}
+    </div>`).join('');
+}
+
 function renderPipeline() {
   renderStats();
   renderPriorityBanner();
+  renderPipelineTabs();
   const tbody = document.getElementById('pipeline-tbody');
   if(!tbody) return;
   const fmtMs = v => { if(!v||v==='null') return '—'; const n=Number(String(v).replace(/[$,]/g,'')); return n?'$'+n.toLocaleString():String(v)||'—'; };
@@ -1423,23 +1459,35 @@ function renderPipeline() {
     };
     return map[s]||'row-enquired';
   };
-  // Apply filter if set
+  // Filter by active tab
   const now2 = new Date();
   let source = [...bookings];
-  if(pipelineFilter === 'upcoming') {
-    source = source.filter(b=>{ const d=Math.floor((new Date(b.date)-now2)/86400000); return d>=0&&d<=30&&!['Completed'].includes(b.status); });
-  } else if(pipelineFilter) {
-    source = source.filter(b=>b.status===pipelineFilter);
+  if(activePipeTab==='action') {
+    source = source.filter(b=>['Enquired','Quoted','Agreement sent','On hold'].includes(b.status));
+    source.sort((a,b)=>{ if(a.date&&b.date) return a.date.localeCompare(b.date); return 0; });
+  } else if(activePipeTab==='upcoming') {
+    source = source.filter(b=>['Deposit paid','Confirmed'].includes(b.status));
+    source.sort((a,b)=>{ if(a.date&&b.date) return a.date.localeCompare(b.date); return 0; });
+  } else if(activePipeTab==='completed') {
+    source = source.filter(b=>b.status==='Completed');
+    source.sort((a,b)=>{ if(a.date&&b.date) return b.date.localeCompare(a.date); return 0; });
+  } else {
+    source.sort((a,b)=>{
+      if(a.status==='Completed'&&b.status!=='Completed') return 1;
+      if(b.status==='Completed'&&a.status!=='Completed') return -1;
+      if(a.date&&b.date) return a.date.localeCompare(b.date);
+      return 0;
+    });
   }
-  // Sort: active first by date, completed last
-  const sorted = source.sort((a,b)=>{
-    if(a.status==='Completed'&&b.status!=='Completed') return 1;
-    if(b.status==='Completed'&&a.status!=='Completed') return -1;
-    if(a.date&&b.date) return a.date.localeCompare(b.date);
-    return 0;
-  });
+  const sorted = source;
   if(!sorted.length){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--faint);">No bookings yet — enquiries from your website will appear here automatically.</td></tr>';
+    const msgs = {
+      action: 'No bookings needing action right now 🎉',
+      upcoming: 'No confirmed or deposit paid bookings yet',
+      completed: 'No completed bookings yet',
+      all: 'No bookings yet — enquiries from your website will appear here automatically'
+    };
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--faint);">${msgs[activePipeTab]||msgs.all}</td></tr>`;
     return;
   }
   tbody.innerHTML = sorted.map(b=>{
