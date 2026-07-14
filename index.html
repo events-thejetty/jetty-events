@@ -402,9 +402,10 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
     <div class="login-wave">🌊</div>
     <div class="login-logo">The Jetty</div>
     <div class="login-sub">Events Management</div>
-    <input class="login-field" type="password" id="login-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-field" type="text" id="login-user" placeholder="Your name" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-field" type="password" id="login-pw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-btn" onclick="doLogin()">Sign in</button>
-    <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
+    <div class="login-err" id="login-err">Incorrect name or password. Please try again.</div>
   </div>
 </div>
 
@@ -486,10 +487,10 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
       </div>
     </div>
     <div class="sidebar-footer">
-      <div class="avatar">JB</div>
+      <div class="avatar" id="user-avatar">JB</div>
       <div>
-        <div class="footer-name">Jemma Bunce</div>
-        <div class="footer-role">Events manager</div>
+        <div class="footer-name" id="user-name">Jemma Bunce</div>
+        <div class="footer-role" id="user-title">Events Manager</div>
       </div>
       <div class="logout-btn" onclick="doLogout()">↩</div>
     </div>
@@ -1248,7 +1249,11 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
 
 <script>
 // ── CONSTANTS ──
-const APP_PASSWORD = 'jetty2026';
+const USERS = [
+  {name:'Jemma Bunce', password:'Jetty2026', title:'Events Manager'},
+  {name:'Angela Bendall', password:'Jetty2026!', title:'Events Team'},
+];
+let currentUser = null;
 const DAYS = ['sun','mon','tue','wed','thu','fri','sat'];
 const CLOSE = 22, OPEN = 9;
 const SAILING_MONTHS = new Set([9,10,11,0,1,2,3,4]);
@@ -1283,18 +1288,31 @@ let calMonth = new Date().getMonth();
 
 // ── AUTH ──
 function doLogin() {
+  const name = document.getElementById('login-user').value.trim();
   const pw = document.getElementById('login-pw').value;
-  if (pw === APP_PASSWORD) {
+  const user = USERS.find(u => u.name.toLowerCase() === name.toLowerCase() && u.password === pw);
+  if (user) {
+    currentUser = user;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').classList.add('visible');
+    // Update sidebar footer with user name
+    const nameEl = document.getElementById('user-name');
+    const titleEl = document.getElementById('user-title');
+    if(nameEl) nameEl.textContent = user.name;
+    if(titleEl) titleEl.textContent = user.title;
+    // Update avatar initials
+    const avatarEl = document.getElementById('user-avatar');
+    if(avatarEl) avatarEl.textContent = user.name.split(' ').map(n=>n[0]).join('').toUpperCase();
     loadData(); initCalc(); renderAll();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
 }
 function doLogout() {
+  currentUser = null;
   document.getElementById('app-shell').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
   document.getElementById('login-pw').value = '';
   document.getElementById('login-err').style.display = 'none';
 }
