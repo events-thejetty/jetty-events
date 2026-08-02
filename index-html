@@ -402,9 +402,10 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
     <div class="login-wave">🌊</div>
     <div class="login-logo">The Jetty</div>
     <div class="login-sub">Events Management</div>
-    <input class="login-field" type="password" id="login-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-field" type="text" id="login-user" placeholder="Your name" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-field" type="password" id="login-pw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-btn" onclick="doLogin()">Sign in</button>
-    <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
+    <div class="login-err" id="login-err">Incorrect name or password. Please try again.</div>
   </div>
 </div>
 
@@ -486,10 +487,10 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
       </div>
     </div>
     <div class="sidebar-footer">
-      <div class="avatar">JB</div>
+      <div class="avatar" id="user-avatar">JB</div>
       <div>
-        <div class="footer-name">Jemma Bunce</div>
-        <div class="footer-role">Events manager</div>
+        <div class="footer-name" id="user-name">Jemma Bunce</div>
+        <div class="footer-role" id="user-title">Events Manager</div>
       </div>
       <div class="logout-btn" onclick="doLogout()">↩</div>
     </div>
@@ -520,7 +521,7 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
           <span class="status-badge sb-enquired">Enquired</span>
           <span class="status-badge sb-quoted">Quoted</span>
           <span class="status-badge sb-agreement">Agreement sent</span>
-          <span class="status-badge sb-deposit">Deposit paid</span>
+          <span class="status-badge sb-deposit">Down payment received</span>
           <span class="status-badge sb-confirmed">Confirmed</span>
           <span class="status-badge sb-completed">Completed</span>
           <span class="status-badge sb-onhold">On hold</span>
@@ -603,7 +604,7 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
       <div class="screen" id="page-calculator">
         <div class="calc-summary" id="calc-summary">
           <div><div class="cs-label">Minimum spend</div><div class="cs-value" id="cs-min">—</div></div>
-          <div><div class="cs-label">20% deposit</div><div class="cs-value" id="cs-dep">—</div></div>
+          <div><div class="cs-label">20% down payment</div><div class="cs-value" id="cs-dep">—</div></div>
           <div><div class="cs-label">Balance on day</div><div class="cs-value" id="cs-bal">—</div></div>
         </div>
         <div class="calc-grid">
@@ -1198,9 +1199,10 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
         <select id="m-type"><option value="">— select —</option><option>Birthday</option><option>Wake</option><option>Wedding reception</option><option>Engagement party</option><option>Baby shower</option><option>Corporate event</option><option>Other</option></select>
       </div>
       <div class="form-field"><label>Status *</label>
-        <select id="m-status"><option>Enquired</option><option>Quoted</option><option>Agreement sent</option><option>Deposit paid</option><option>Confirmed</option><option>Completed</option><option>On hold</option></select>
+        <select id="m-status"><option>Enquired</option><option>Quoted</option><option>Agreement sent</option><option>Down payment received</option><option>Confirmed</option><option>Completed</option><option>On hold</option></select>
       </div>
-      <div class="form-field"><label>Event date</label><input type="date" id="m-date"/></div>
+      <div class="form-field"><label>Event date</label><input type="date" id="m-date" onchange="checkDateConflicts(this.value)"/></div>
+      <div id="m-date-conflicts" style="display:none;"></div>
       <div class="form-field"><label>Start time</label>
         <input type="text" id="m-start" placeholder="e.g. 5:00pm"/>
       </div>
@@ -1210,7 +1212,7 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
         <select id="m-venue"><option>Bar side</option><option>Restaurant side</option><option>Full venue</option></select>
       </div>
       <div class="form-field"><label>Minimum spend ($)</label><input type="number" id="m-minspend"/></div>
-      <div class="form-field"><label>Deposit paid ($)</label><input type="number" id="m-deposit"/></div>
+      <div class="form-field"><label>Down payment received ($)</label><input type="number" id="m-deposit"/></div>
       <div class="form-field"><label>Layout notes</label><input type="text" id="m-layout" placeholder="e.g. round tables, dance floor"/></div>
     </div>
     <div class="modal-section">Catering & add-ons</div>
@@ -1226,6 +1228,7 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
       <div class="form-field"><label>Last contacted</label><input type="date" id="m-lastcontact"/></div>
       <div class="form-field"><label>Follow-up due</label><input type="date" id="m-followup"/></div>
     </div>
+    <div style="background:#fff8e6;border:1px solid #f0b429;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#a07000;line-height:1.6;"><strong>📋 Cancellation policy:</strong> 30+ days — full refund · 14–30 days — down payment forfeited · Under 14 days — down payment forfeited + 50% min spend · Cancelled by The Jetty — full refund</div>
     <div class="form-field"><label>Catering / client notes</label><textarea id="m-notes" placeholder="Catering details, special requirements, notes from client"></textarea></div>
     <div class="form-field">
       <label>Team notes timeline <span style="font-size:10px;color:var(--muted);font-weight:400;">(internal only)</span></label>
@@ -1247,7 +1250,11 @@ body{font-family:var(--font-main);background:var(--sand);color:var(--ink);min-he
 
 <script>
 // ── CONSTANTS ──
-const APP_PASSWORD = 'jetty2026';
+const USERS = [
+  {name:'Jemma Bunce', password:'Jetty2026', title:'Events Manager'},
+  {name:'Angela Bendall', password:'Jetty2026!', title:'Events Team'},
+];
+let currentUser = null;
 const DAYS = ['sun','mon','tue','wed','thu','fri','sat'];
 const CLOSE = 22, OPEN = 9;
 const SAILING_MONTHS = new Set([9,10,11,0,1,2,3,4]);
@@ -1260,7 +1267,7 @@ const HOURLY = {
   sun:{bar:215,restaurant:430,full:430}
 };
 const BLOCKED_DATES = new Set([]); // dates now managed via Supabase tentative_dates
-const STATUSES = ['Enquired','Quoted','Agreement sent','Deposit paid','Confirmed','Completed','On hold'];
+const STATUSES = ['Enquired','Quoted','Agreement sent','Down payment received','Confirmed','Completed','On hold'];
 const TENT_KEY = 'jetty_tentative_dates';
 const BOOKINGS_KEY = 'jetty_bookings_v2';
 const MENU_ITEMS = {
@@ -1282,18 +1289,31 @@ let calMonth = new Date().getMonth();
 
 // ── AUTH ──
 function doLogin() {
+  const name = document.getElementById('login-user').value.trim();
   const pw = document.getElementById('login-pw').value;
-  if (pw === APP_PASSWORD) {
+  const user = USERS.find(u => u.name.toLowerCase() === name.toLowerCase() && u.password === pw);
+  if (user) {
+    currentUser = user;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').classList.add('visible');
+    // Update sidebar footer with user name
+    const nameEl = document.getElementById('user-name');
+    const titleEl = document.getElementById('user-title');
+    if(nameEl) nameEl.textContent = user.name;
+    if(titleEl) titleEl.textContent = user.title;
+    // Update avatar initials
+    const avatarEl = document.getElementById('user-avatar');
+    if(avatarEl) avatarEl.textContent = user.name.split(' ').map(n=>n[0]).join('').toUpperCase();
     loadData(); initCalc(); renderAll();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
 }
 function doLogout() {
+  currentUser = null;
   document.getElementById('app-shell').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
   document.getElementById('login-pw').value = '';
   document.getElementById('login-err').style.display = 'none';
 }
@@ -1378,7 +1398,7 @@ function renderWeeklySummary() {
   // Count by action needed
   const needsQuote = bookings.filter(b=>b.status==='Enquired'&&!['Completed'].includes(b.status));
   const awaitingDeposit = bookings.filter(b=>b.status==='Agreement sent');
-  const depositPaid = bookings.filter(b=>b.status==='Deposit paid');
+  const depositPaid = bookings.filter(b=>b.status==='Down payment received');
   const upcomingEvents = bookings.filter(b=>{
     if(!b.date||['Completed'].includes(b.status)) return false;
     const days = Math.floor((new Date(b.date)-now)/86400000);
@@ -1404,7 +1424,7 @@ function renderWeeklySummary() {
     <div style="font-size:11px;font-weight:600;color:#a07000;">Awaiting deposit</div>
   </div>`;
 
-  if(depositPaid.length) html += `<div style="background:#f3e6ff;border-radius:8px;padding:10px 12px;cursor:pointer;" onclick="filterPipeline('Deposit paid')">
+  if(depositPaid.length) html += `<div style="background:#f3e6ff;border-radius:8px;padding:10px 12px;cursor:pointer;" onclick="filterPipeline('Down payment received')">
     <div style="font-size:22px;font-weight:700;color:#6b21a8;">${depositPaid.length}</div>
     <div style="font-size:11px;font-weight:600;color:#6b21a8;">Deposit${depositPaid.length===1?'':' payments'} to confirm</div>
   </div>`;
@@ -1435,10 +1455,22 @@ function getPriorityBookings() {
     if(['Completed','Declined'].includes(b.status)) return;
     const daysUntilEvent = b.date ? Math.floor((new Date(b.date) - now) / 86400000) : 999;
     const daysSinceContact = b.lastcontact && b.lastcontact !== '' ? Math.floor((now - new Date(b.lastcontact)) / 86400000) : null;
-    if(b.status==='Enquired' && daysSinceContact !== null && daysSinceContact > 2) urgent.push({b, reason:'No response in '+daysSinceContact+' days', level:'high'});
-    else if(b.status==='Quoted' && daysSinceContact !== null && daysSinceContact > 5) urgent.push({b, reason:'Quote sent '+daysSinceContact+' days ago — no reply', level:'high'});
-    else if(b.status==='Tentative' && daysUntilEvent < 30 && daysUntilEvent > 0) urgent.push({b, reason:'Event in '+daysUntilEvent+' days — not confirmed', level:'high'});
-    else if(b.status==='Deposit paid' && daysUntilEvent < 14 && daysUntilEvent > 0) urgent.push({b, reason:'Event in '+daysUntilEvent+' days — check final details', level:'medium'});
+    if(b.status==='Enquired' && daysSinceContact !== null && daysSinceContact > 2)
+      urgent.push({b, reason:'No response in '+daysSinceContact+' days', level:'high'});
+    else if(b.status==='Quoted' && daysSinceContact !== null && daysSinceContact > 5)
+      urgent.push({b, reason:'Quote sent '+daysSinceContact+' days ago — no reply', level:'high'});
+    else if(b.status==='Agreement sent' && daysSinceContact !== null && daysSinceContact >= 7)
+      urgent.push({b, reason:'⚠️ Agreement sent '+daysSinceContact+' days ago — no down payment received. Consider releasing the date.', level:'high'});
+    else if(b.status==='Agreement sent' && daysSinceContact !== null && daysSinceContact >= 5)
+      urgent.push({b, reason:'Agreement sent '+daysSinceContact+' days ago — down payment due in '+(7-daysSinceContact)+' day(s)', level:'medium'});
+    else if(b.status==='Tentative' && daysUntilEvent < 30 && daysUntilEvent > 0)
+      urgent.push({b, reason:'Event in '+daysUntilEvent+' days — not confirmed', level:'high'});
+    else if(b.status==='Down payment received' && daysUntilEvent < 14 && daysUntilEvent > 0)
+      urgent.push({b, reason:'Event in '+daysUntilEvent+' days — check final details', level:'medium'});
+    if(['Confirmed','Down payment received'].includes(b.status) && daysUntilEvent > 0 && daysUntilEvent <= 14)
+      urgent.push({b, reason:'⚠️ Event in '+daysUntilEvent+' days — cancellation now forfeits down payment + 50% min spend', level:'high'});
+    else if(['Confirmed','Down payment received'].includes(b.status) && daysUntilEvent > 14 && daysUntilEvent <= 30)
+      urgent.push({b, reason:'Event in '+daysUntilEvent+' days — cancellation within 30 days forfeits down payment', level:'medium'});
   });
   return urgent;
 }
@@ -1462,10 +1494,10 @@ function renderStats() {
   const confirmed = bookings.filter(b=>b.status==='Confirmed').length;
   const overdue = bookings.filter(b=>isOverdue(b)).length;
   const parseMs = v => { if(!v) return 0; return Number(String(v).replace(/[$,]/g,''))||0; };
-  const minSpends = bookings.filter(b=>b.minspend&&['Confirmed','Deposit paid'].includes(b.status)).reduce((a,b)=>a+parseMs(b.minspend),0);
+  const minSpends = bookings.filter(b=>b.minspend&&['Confirmed','Down payment received'].includes(b.status)).reduce((a,b)=>a+parseMs(b.minspend),0);
   document.getElementById('stats-row').innerHTML = `
     <div class="stat-card"><div class="stat-label">Active bookings</div><div class="stat-value">${active}</div><div class="stat-delta">across all stages</div></div>
-    <div class="stat-card"><div class="stat-label">Confirmed</div><div class="stat-value teal">${confirmed}</div><div class="stat-delta">deposits received</div></div>
+    <div class="stat-card"><div class="stat-label">Confirmed</div><div class="stat-value teal">${confirmed}</div><div class="stat-delta">down payments received</div></div>
     <div class="stat-card"><div class="stat-label">Need attention</div><div class="stat-value ${overdue>0?'red':''}">${overdue}</div><div class="stat-delta">overdue follow-ups</div></div>
     <div class="stat-card"><div class="stat-label">Revenue locked in</div><div class="stat-value teal">$${minSpends.toLocaleString()}</div><div class="stat-delta">confirmed min. spend</div></div>`;
   document.getElementById('nb-pipeline').textContent = active;
@@ -1489,7 +1521,7 @@ function renderPipelineTabs() {
   const el = document.getElementById('pipeline-tabs');
   if(!el) return;
   const actionCount = bookings.filter(b=>['Enquired','Quoted','Agreement sent','On hold'].includes(b.status)).length;
-  const upcomingCount = bookings.filter(b=>['Deposit paid','Confirmed'].includes(b.status)).length;
+  const upcomingCount = bookings.filter(b=>['Down payment received','Confirmed'].includes(b.status)).length;
   const completedCount = bookings.filter(b=>b.status==='Completed').length;
   const allCount = bookings.length;
   const tabs = [
@@ -1515,7 +1547,7 @@ function renderPipeline() {
     const map = {
       'Enquired':'sb-enquired','Quoted':'sb-quoted',
       'Agreement sent':'sb-agreement','Tentative':'sb-tentative',
-      'Deposit paid':'sb-deposit','Confirmed':'sb-confirmed',
+      'Down payment received':'sb-deposit','Confirmed':'sb-confirmed',
       'Completed':'sb-completed','On hold':'sb-onhold'
     };
     return `<span class="status-badge ${map[s]||'sb-enquired'}">${s||'Enquired'}</span>`;
@@ -1524,7 +1556,7 @@ function renderPipeline() {
     const map = {
       'Enquired':'row-enquired','Quoted':'row-quoted',
       'Agreement sent':'row-agreement','Tentative':'row-tentative',
-      'Deposit paid':'row-deposit','Confirmed':'row-confirmed',
+      'Down payment received':'row-deposit','Confirmed':'row-confirmed',
       'Completed':'row-completed','On hold':'row-onhold'
     };
     return map[s]||'row-enquired';
@@ -1536,7 +1568,7 @@ function renderPipeline() {
     source = source.filter(b=>['Enquired','Quoted','Agreement sent','On hold'].includes(b.status));
     source.sort((a,b)=>{ if(a.date&&b.date) return a.date.localeCompare(b.date); return 0; });
   } else if(activePipeTab==='upcoming') {
-    source = source.filter(b=>['Deposit paid','Confirmed'].includes(b.status));
+    source = source.filter(b=>['Down payment received','Confirmed'].includes(b.status));
     source.sort((a,b)=>{ if(a.date&&b.date) return a.date.localeCompare(b.date); return 0; });
   } else if(activePipeTab==='completed') {
     source = source.filter(b=>b.status==='Completed');
@@ -1553,7 +1585,7 @@ function renderPipeline() {
   if(!sorted.length){
     const msgs = {
       action: 'No bookings needing action right now 🎉',
-      upcoming: 'No confirmed or deposit paid bookings yet',
+      upcoming: 'No confirmed or down payment received bookings yet',
       completed: 'No completed bookings yet',
       all: 'No bookings yet — enquiries from your website will appear here automatically'
     };
@@ -1585,7 +1617,7 @@ function renderPipeline() {
       <td>${cateringTags||'<span style="color:var(--faint);">None</span>'}</td>
       <td onclick="event.stopPropagation()" style="white-space:nowrap;">
         <select class="status-select-inline" onchange="quickStatusChange('${b.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--sand-border);border-radius:6px;background:var(--white);font-family:var(--font-main);color:var(--ink);cursor:pointer;margin-bottom:4px;display:block;width:100%;">
-          ${['Enquired','Quoted','Agreement sent','Deposit paid','Confirmed','Completed','On hold'].map(s=>`<option value="${s}" ${s===b.status?'selected':''}>${s}</option>`).join('')}
+          ${['Enquired','Quoted','Agreement sent','Down payment received','Confirmed','Completed','On hold'].map(s=>`<option value="${s}" ${s===b.status?'selected':''}>${s}</option>`).join('')}
         </select>
         <div style="display:flex;gap:3px;">
           <button class="btn" style="font-size:9px;padding:2px 4px;flex:1;" onclick="event.stopPropagation();showEmailDraftModal(generateEmailDraft(bookings.find(x=>x.id==='${b.id}'),'02'),bookings.find(x=>x.id==='${b.id}')?.name)" title="Draft quote email">📧</button>
@@ -1746,6 +1778,9 @@ function openBookingModal(id){
   if(b2) renderNotesTimeline(b2.timeline||[]);
   else { renderNotesTimeline([]); }
   if(document.getElementById('m-note-input')) document.getElementById('m-note-input').value='';
+  // Check date conflicts
+  const dateVal = document.getElementById('m-date').value;
+  if(dateVal) checkDateConflicts(dateVal);
   if(b2) {
     const fmtMsVal = v => { if(!v||v==='null') return '—'; const n=Number(String(v).replace(/[$,]/g,'')); return n?'$'+n.toLocaleString():String(v)||'—'; };
     const minspendFmt = fmtMsVal(b2.minspend);
@@ -2049,7 +2084,7 @@ function calcRun(){
   addonLines.forEach(([l,v])=>rows+=`<div class="bk-row"><span>${l}</span><span>${v}</span></div>`);
   if(guests>50)rows+=`<div class="bk-row" style="color:var(--amber-dark)"><span>Staffing surcharge (50+ guests)</span><span>TBC</span></div>`;
   rows+=`<div class="bk-row bk-total"><span>Minimum spend</span><span>$${minSpend.toLocaleString()}</span></div>`;
-  rows+=`<div class="bk-row bk-dep"><span>20% deposit to confirm</span><span>$${deposit.toLocaleString()}</span></div>`;
+  rows+=`<div class="bk-row bk-dep"><span>20% down payment to confirm</span><span>$${deposit.toLocaleString()}</span></div>`;
   if(extrasExceed)rows+=`<div class="bk-row bk-result"><span>Total to pay (before/on/after event)</span><span>$${totalExtras.toLocaleString()}</span></div><div class="bk-row" style="color:var(--muted);font-size:11px;"><span>Balance after deposit</span><span>$${balance.toLocaleString()}</span></div>`;
   else if(hasExtras)rows+=`<div class="bk-row bk-result"><span>Minimum spend covered ✓</span><span></span></div>${barBudget>0?'<div class="bk-row" style="color:var(--muted);font-size:11px;font-style:italic;"><span>Remaining bar tab on the day</span><span>~$'+barBudget.toLocaleString()+'</span></div>':''}`;
   else rows+=`<div class="bk-row bk-result"><span>Bar tab on the day (after deposit)</span><span>$${(minSpend-deposit).toLocaleString()}</span></div>`;
@@ -2206,7 +2241,7 @@ Wonderful — we're so excited to host your [event type] at The Jetty!
 
 Please find attached your event booking agreement. Could you please review it, sign at the bottom, and return a copy to events@thejetty.co? Once we have that back we'll get your date officially locked in.
 
-To secure your booking we also need a 20% deposit of $[deposit amount]:
+To secure your booking we also need a 20% down payment of $[deposit amount]:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Account name:   The Jetty Plimmerton
@@ -2232,7 +2267,7 @@ Warm regards,
 Events Manager | The Jetty Plimmerton
 events@thejetty.co | thejetty.co`},
 
-  {num:'04',name:'Deposit received + booking confirmed',when:'Once the deposit has cleared and signed agreement is returned',
+  {num:'04',name:'Down payment received + booking confirmed',when:'Once the deposit has cleared and signed agreement is returned',
    body:`Hi [Client name],
 
 Great news — we've received your deposit and signed agreement, and your booking is now officially confirmed! 🎉
@@ -2554,7 +2589,7 @@ function quickStatusChange(id, newStatus) {
   b.status = newStatus;
   renderPipeline();
   sbRequest('PATCH','bookings',toSbFormat(b),'?id=eq.'+b.id);
-  const draftMap = {'Quoted':'02','Agreement sent':'03','Deposit paid':'04','Confirmed':'04'};
+  const draftMap = {'Quoted':'02','Agreement sent':'03','Down payment received':'04','Confirmed':'04'};
   if(draftMap[newStatus]) {
     setTimeout(()=>showEmailDraftModal(generateEmailDraft(b, draftMap[newStatus]), b.name), 300);
   }
@@ -2595,7 +2630,7 @@ MINIMUM SPEND:   ${ms}
 
 The minimum spend covers your venue hire. Catering and add-ons come off this amount and whatever's left becomes your bar tab on the night.
 
-To lock in your date we just need the 20% deposit of ${dep}. Any questions at all please don't hesitate to ask!
+To lock in your date we just need the 20% down payment of ${dep}. Any questions at all please don't hesitate to ask!
 
 Warm regards,
 Jemma
@@ -2610,7 +2645,7 @@ Wonderful — we're so excited to host your ${b.type||'event'} at The Jetty!
 
 Please find attached your event booking agreement. Could you review it, sign at the bottom and return a copy to events@thejetty.co?
 
-To secure your booking we also need a 20% deposit of ${dep}:
+To secure your date we need a 20% down payment of ${dep}. This payment is subject to our cancellation policy below.
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 Account name:   The Jetty Plimmerton
@@ -2645,7 +2680,7 @@ Great news — we've received your deposit and your booking is now officially co
 👥 Guests: ${guests}
 🍽️ Catering: ${cat}
 
-Please find attached your invoice for the deposit received. Your remaining balance will be due on the day.
+Please find attached your invoice for the down payment received. Your remaining balance will be due on the day.
 
 We'll be in touch closer to the date to confirm final numbers. We can't wait!
 
@@ -3556,7 +3591,7 @@ function downloadAgreement(bookingId) {
   if(b) {
     const fmtMs2 = v => { if(!v||v==='null'||v==='0') return '—'; const n=Number(String(v).replace(/[$,]/g,'')); return n?'$'+n.toLocaleString():String(v)||'—'; };
     const dep = b.deposit&&b.deposit!=='0'?fmtMs2(b.deposit):b.minspend?'$'+Math.round(Number(String(b.minspend).replace(/[$,]/g,''))*0.2).toLocaleString():'[Deposit]';
-    alert(`Agreement downloaded for ${b.name}\n\nRemember to fill in:\n• Client signature line\n• Your signature\n• Bank account details\n\nKey details:\n• Date: ${fmtDate(b.date)||'TBC'}\n• Venue: ${b.venue||'TBC'}\n• Min spend: ${fmtMs2(b.minspend)}\n• Deposit: ${dep}`);
+    alert(`Agreement downloaded for ${b.name}\n\nRemember to fill in:\n• Client signature line\n• Your signature\n• Bank account details\n\nKey details:\n• Date: ${fmtDate(b.date)||'TBC'}\n• Venue: ${b.venue||'TBC'}\n• Min spend: ${fmtMs2(b.minspend)}\n• Down payment: ${dep}`);
   }
 }
 
@@ -3630,6 +3665,31 @@ function generateInvoice(bookingId) {
   const win = window.open('','_blank','width=750,height=900');
   win.document.write(invoiceHtml);
   win.document.close();
+}
+
+function checkDateConflicts(date) {
+  const el = document.getElementById('m-date-conflicts');
+  if(!el || !date) { if(el) el.style.display='none'; return; }
+  // Find other bookings on same date (excluding current booking being edited)
+  const conflicts = bookings.filter(b => b.date === date && b.id !== editingId && !['Completed','Declined'].includes(b.status));
+  if(!conflicts.length) { el.style.display='none'; return; }
+  const confirmed = conflicts.filter(b=>['Confirmed','Down payment received'].includes(b.status));
+  const enquired = conflicts.filter(b=>['Enquired','Quoted','Agreement sent'].includes(b.status));
+  let html = '';
+  if(confirmed.length) {
+    html += `<div style="background:#fee2e2;border:1px solid #ef4444;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;color:#991b1b;">
+      <strong>⚠️ Confirmed booking on this date:</strong><br>
+      ${confirmed.map(b=>`${b.name} — ${b.venue||'?'} (${b.type||'Event'})`).join('<br>')}
+    </div>`;
+  }
+  if(enquired.length) {
+    html += `<div style="background:#fff8e6;border:1px solid #f0b429;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;color:#a07000;">
+      <strong>📋 Other enquiries on this date:</strong><br>
+      ${enquired.map(b=>`${b.name} — ${b.status} — ${b.venue||'?'}`).join('<br>')}
+    </div>`;
+  }
+  el.innerHTML = html;
+  el.style.display = 'block';
 }
 
 function openMobileMenu(){
