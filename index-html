@@ -2098,33 +2098,52 @@ function calcRun(){
   document.getElementById('calc-breakdown').style.display='block';
 }
 function generateQuoteEmail(){
-  // Build a booking object from calculator values
   const dateEl = document.getElementById('calc-date');
   const guestsEl = document.getElementById('calc-guests');
   const hoursEl = document.getElementById('calc-hours');
   const sideEl = document.getElementById('calc-side');
   const startEl = document.getElementById('calc-start');
-  const msEl = document.getElementById('calc-minspend');
+  const msEl = document.getElementById('cs-min');
+  const depEl = document.getElementById('cs-dep');
+  if(!dateEl||!dateEl.value){alert('Please select a date and venue first.');return;}
   const sideMap = {'bar':'Bar side','restaurant':'Restaurant side','full':'Full venue'};
+  // Prompt for client name and email
+  const clientName = prompt('Client name for the quote:','') || '[Client name]';
+  const clientEmail = prompt('Client email address (leave blank to fill in later):','') || '';
+  // Get catering from selectedCat variable
+  let catering = 'No catering selected';
+  if(selectedCat==='grazing') catering='Grazing table';
+  else if(selectedCat==='menu') catering='Evening menu selection';
+  else if(selectedCat==='self') catering='Self-catering';
+  // Get musician/AV
+  const musicianCheck = document.getElementById('calc-musician');
+  const avCheck = document.getElementById('calc-av');
+  const addons = [];
+  if(musicianCheck&&musicianCheck.checked) addons.push('In-house musician');
+  if(avCheck&&avCheck.checked) addons.push('AV equipment');
   const calcB = {
-    name: '[Client name]',
-    date: dateEl?dateEl.value:'',
-    guests: guestsEl?guestsEl.value:'',
+    name: clientName,
+    email: clientEmail,
+    date: dateEl.value,
+    guests: guestsEl?guestsEl.value:'50',
     hours: hoursEl?hoursEl.value:'3',
     venue: sideEl?sideMap[sideEl.value]||sideEl.value:'',
     start: startEl?startEl.value:'17',
     minspend: msEl?msEl.textContent.replace(/[$,]/g,''):'',
-    deposit: '',
-    notes: '',
+    deposit: depEl?depEl.textContent.replace(/[$,]/g,''):'',
+    notes: catering+(addons.length?' + '+addons.join(', '):''),
     type: '[Event type]',
   };
-  // Try to get catering selection
-  const grazingEl = document.querySelector('#calc-grazing:checked, [id*="grazing"]:checked');
-  const menuEl = document.querySelector('#calc-menu:checked, [id*="menu"]:checked');
-  if(grazingEl) calcB.notes = 'Grazing table';
-  else if(menuEl) calcB.notes = 'Evening menu selection';
   const draft = generateEmailDraft(calcB, '02');
-  if(draft) showEmailDraftModal(draft, '[Client name]');
+  if(draft) {
+    // Set gmail link with email if provided
+    document.getElementById('email-draft-name').textContent = clientName;
+    document.getElementById('email-draft-subject').value = draft.subject;
+    document.getElementById('email-draft-body').value = draft.body;
+    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(clientEmail)+'&su='+encodeURIComponent(draft.subject)+'&body='+encodeURIComponent(draft.body);
+    document.getElementById('gmail-btn').href = gmailUrl;
+    document.getElementById('email-draft-modal').style.display='flex';
+  }
 }
 
 // ── TENTATIVE DATES ──
